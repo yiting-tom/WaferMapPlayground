@@ -1,0 +1,4 @@
+n_layers: 1
+dropout: 0.49743291612395546
+output_dims:
+- 13
