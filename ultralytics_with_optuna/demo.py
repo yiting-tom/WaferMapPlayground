@@ -7,77 +7,55 @@ This script runs a quick test with reduced parameters for faster execution
 import sys
 from pathlib import Path
 
-import matplotlib.pyplot as plt
-
 # Add parent directory to path to import main module
 sys.path.append(str(Path(__file__).parent))
-from main import WaferDefectClassifier
+
+from classifier import WaferDefectClassifier
+from config import DataConfig, OptunaConfig
+from visualization import WaferVisualization
 
 
-def quick_demo():
+def quick_demo() -> dict:
     """Run a quick demo with reduced dataset and training parameters"""
     print("=== Wafer Defect Classification Quick Demo ===\n")
 
-    # Initialize classifier
-    classifier = WaferDefectClassifier()
+    # Initialize classifier with clean architecture
+    classifier = WaferDefectClassifier(data_path=DataConfig.DEFAULT_DATA_PATH)
 
-    # Load and analyze data
-    print("1. Loading dataset...")
-    images, labels = classifier.load_data()
+    print("Running quick demo with reduced parameters for faster execution...")
 
-    print("\n2. Analyzing labels...")
-    label_analysis = classifier.analyze_labels(labels)
-
-    # Use a stratified subset of data for quick demo to ensure all classes are represented
-    print("\n3. Using stratified subset of data for quick demo...")
-    from sklearn.model_selection import train_test_split
-
-    subset_size = min(2000, len(images))  # Increased size for better representation
-
-    # Convert labels to class indices for stratification
-    class_indices = []
-    for label in labels:
-        label_tuple = tuple(label)
-        class_idx = classifier.label_to_class[label_tuple]
-        class_indices.append(class_idx)
-
-    # Stratified sampling to ensure representation from all classes
-    indices = list(range(len(images)))
-    subset_indices, _ = train_test_split(
-        indices,
-        test_size=1 - subset_size / len(images),
-        stratify=class_indices,
-        random_state=42,
-    )
-
-    images_subset = images[subset_indices]
-    labels_subset = labels[subset_indices]
-
-    print(f"Using {subset_size} samples for demo")
-
-    # Create dataset
-    print("\n4. Creating YOLO dataset structure...")
-    classifier.create_yolo_dataset(images_subset, labels_subset)
-
-    # Train model with reduced parameters
-    print("\n5. Training model (quick demo - 5 epochs)...")
-    training_results = classifier.train_model(
+    # Run pipeline with demo-friendly settings
+    results = classifier.run_complete_pipeline(
         epochs=5,  # Very few epochs for quick demo
         img_size=128,  # Smaller image size for faster training
-        batch_size=16,  # Smaller batch size
+        use_subset=True,  # Use subset for faster processing
+        subset_size=OptunaConfig.DEMO_SUBSET_SIZE,  # Small subset
+        balance_classes=False,  # Keep original distribution
+        visualize=True,
+        save_results=True,
     )
-
-    # Evaluate model
-    print("\n6. Evaluating model...")
-    eval_results = classifier.evaluate_model()
 
     # Show sample images
     print("\n7. Visualizing sample wafer maps...")
-    plot_sample_images(images_subset[:9], labels_subset[:9], classifier.class_names)
+    visualizer = WaferVisualization()
+
+    # Load a small sample of images for visualization
+    images, labels = classifier.data_processor.load_data()
+    sample_images = images[:9]  # First 9 images
+    sample_labels = labels[:9]
+
+    visualizer.plot_sample_wafer_maps(
+        sample_images,
+        sample_labels,
+        classifier.data_processor.class_names,
+        classifier.data_processor.label_to_class,
+        n_samples=9,
+        save_path="sample_wafer_maps_demo.png",
+    )
 
     print("\n=== Demo Complete ===")
-    print(f"Demo Accuracy: {eval_results['accuracy']:.4f}")
-    print(f"Number of classes: {label_analysis['num_classes']}")
+    print(f"Demo Accuracy: {results['evaluation_results']['accuracy']:.4f}")
+    print(f"Number of classes: {results['label_analysis']['num_classes']}")
     print("Model saved in: runs/classify/wafer_defect_classifier/")
 
     # Example prediction
@@ -88,52 +66,28 @@ def quick_demo():
                 test_images = list(class_dir.glob("*.png"))
                 if test_images:
                     sample_image = test_images[0]
-                    prediction = classifier.predict_sample(str(sample_image))
-                    print("\nSample Prediction:")
-                    print(f"Predicted: {prediction['class_name']}")
-                    print(f"Confidence: {prediction['confidence']:.4f}")
+                    try:
+                        prediction = classifier.predict_sample(str(sample_image))
+                        print("\nSample Prediction:")
+                        print(f"Predicted: {prediction['class_name']}")
+                        print(f"Confidence: {prediction['confidence']:.4f}")
+                    except Exception as e:
+                        print(f"Sample prediction failed: {e}")
                     break
 
-    return {
-        "label_analysis": label_analysis,
-        "training_results": training_results,
-        "evaluation_results": eval_results,
-    }
+    return results
 
 
-def plot_sample_images(images, labels, class_names):
-    """Plot sample wafer map images with their labels"""
-    fig, axes = plt.subplots(3, 3, figsize=(12, 12))
-    fig.suptitle("Sample Wafer Maps with Defect Classifications", fontsize=16)
-
-    for i, (ax, image, label) in enumerate(zip(axes.flat, images, labels)):
-        # Display image
-        ax.imshow(image, cmap="viridis")
-
-        # Find class name
-        label_tuple = tuple(label)
-        active_defects = [j for j, val in enumerate(label) if val == 1]
-        if not active_defects:
-            class_name = "Normal"
-        else:
-            class_name = f"Defect_{'-'.join(map(str, active_defects))}"
-
-        ax.set_title(f"Sample {i + 1}: {class_name}", fontsize=10)
-        ax.set_xlabel(f"Pattern: {label}", fontsize=8)
-        ax.axis("off")
-
-    plt.tight_layout()
-    plt.savefig("sample_wafer_maps.png", dpi=300, bbox_inches="tight")
-    plt.show()
-
-
-def analyze_dataset_only():
+def analyze_dataset_only() -> dict:
     """Just analyze the dataset without training"""
     print("=== Dataset Analysis Only ===\n")
 
-    classifier = WaferDefectClassifier()
-    images, labels = classifier.load_data()
-    label_analysis = classifier.analyze_labels(labels)
+    # Initialize data processor
+    from data_processor import WaferDataProcessor
+
+    data_processor = WaferDataProcessor(DataConfig.DEFAULT_DATA_PATH)
+    images, labels = data_processor.load_data()
+    label_analysis = data_processor.analyze_labels(labels)
 
     # Show some statistics
     print("\nDataset Statistics:")
@@ -142,12 +96,62 @@ def analyze_dataset_only():
     print(f"Number of unique defect patterns: {label_analysis['num_classes']}")
 
     # Plot sample images
-    plot_sample_images(images[:9], labels[:9], label_analysis["class_names"])
+    visualizer = WaferVisualization()
+    visualizer.plot_sample_wafer_maps(
+        images[:9],
+        labels[:9],
+        data_processor.class_names,
+        data_processor.label_to_class,
+        save_path="dataset_analysis_samples.png",
+    )
+
+    # Plot class distribution
+    class_distribution = data_processor.get_class_distribution(labels)
+    visualizer.plot_class_distribution(
+        class_distribution,
+        save_path="dataset_class_distribution.png",
+        title="Dataset Class Distribution",
+    )
 
     return label_analysis
 
 
-if __name__ == "__main__":
+def performance_demo() -> dict:
+    """Demo focused on performance evaluation"""
+    print("=== Performance Evaluation Demo ===\n")
+
+    classifier = WaferDefectClassifier()
+
+    # Run with more reasonable parameters for performance evaluation
+    results = classifier.run_complete_pipeline(
+        epochs=20,  # More epochs for better performance
+        img_size=224,  # Standard image size
+        use_subset=True,
+        subset_size=3000,  # Larger subset for better evaluation
+        balance_classes=True,  # Balance for fair evaluation
+        visualize=True,
+        save_results=True,
+    )
+
+    # Additional performance metrics
+    eval_results = results["evaluation_results"]
+
+    print("\n=== Performance Summary ===")
+    print(f"Accuracy: {eval_results['accuracy']:.4f}")
+
+    if "classification_report" in eval_results:
+        report = eval_results["classification_report"]
+        if "weighted avg" in report:
+            weighted = report["weighted avg"]
+            print(f"Weighted Precision: {weighted.get('precision', 0):.4f}")
+            print(f"Weighted Recall: {weighted.get('recall', 0):.4f}")
+            print(f"Weighted F1-Score: {weighted.get('f1-score', 0):.4f}")
+
+    return results
+
+
+def main():
+    """Main function with command line interface"""
     import argparse
 
     parser = argparse.ArgumentParser(description="Wafer Defect Classification Demo")
@@ -161,15 +165,25 @@ if __name__ == "__main__":
         action="store_true",
         help="Run quick demo with reduced parameters",
     )
+    parser.add_argument(
+        "--performance-demo",
+        action="store_true",
+        help="Run performance-focused demo with better parameters",
+    )
 
     args = parser.parse_args()
 
     if args.analyze_only:
         analyze_dataset_only()
+    elif args.performance_demo:
+        performance_demo()
     elif args.quick_demo or len(sys.argv) == 1:
         # Default to quick demo
         quick_demo()
     else:
-        print(
-            "Use --analyze-only to just analyze data or --quick-demo for quick training test"
-        )
+        print("Use --analyze-only, --quick-demo, or --performance-demo")
+        print("Run with --help for more information")
+
+
+if __name__ == "__main__":
+    main()
