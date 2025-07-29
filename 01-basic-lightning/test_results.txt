@@ -1,0 +1,23 @@
+WAFER DEFECT CLASSIFICATION - TEST RESULTS
+==================================================
+
+OVERALL PERFORMANCE:
+Accuracy:           0.2556
+Precision (macro):  0.2415
+Precision (weighted): 0.1454
+Recall (macro):     0.3333
+Recall (weighted):  0.2556
+F1-Score (macro):   0.2551
+F1-Score (weighted): 0.1617
+AUC-ROC (macro):    0.8333
+
+CONFUSION MATRIX:
+[[ 0  0  0  0  0  0  0  0 10]
+ [10  0  0  0  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0  0 17]
+ [ 0  0  0  5  0  0  0  0  0]
+ [ 0  0  0  0  0  0  0  0 11]
+ [ 0  0  0  0  0  0  0  0 10]
+ [ 0  0  0  0  0  0  0  0  9]
+ [ 0  0  0  0  0  0  0  6  0]
+ [ 0  0  0  0  0  0  0  0 12]]

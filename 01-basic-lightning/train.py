@@ -262,18 +262,12 @@ def main():
     print("✓ Clean code organization")
     print("=" * 50)
 
-    # Run training with different configurations for comparison
+    # Run training with one configuration for quick demo
     configurations = [
         {
             "name": "Adam Optimizer",
             "optimizer_name": "Adam",
             "learning_rate": 1e-3,
-            "batch_size": 32,
-        },
-        {
-            "name": "SGD Optimizer",
-            "optimizer_name": "SGD",
-            "learning_rate": 1e-2,
             "batch_size": 32,
         },
     ]
@@ -286,7 +280,7 @@ def main():
 
         results = train_basic_lightning_model(
             batch_size=config["batch_size"],
-            max_epochs=30,  # Reduced for tutorial
+            max_epochs=2,  # Very short for quick demo
             learning_rate=config["learning_rate"],
             optimizer_name=config["optimizer_name"],
             use_class_weights=True,

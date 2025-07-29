@@ -1,0 +1,20 @@
+{
+  "total_samples": 90,
+  "prediction_distribution": {
+    "Center": 10,
+    "Edge-Ring": 5,
+    "Near-full": 6,
+    "None": 69
+  },
+  "confidence_stats": {
+    "mean": 0.33513468503952026,
+    "std": 0.172840878367424,
+    "min": 0.19864051043987274,
+    "max": 0.9692472219467163,
+    "median": 0.3100147843360901
+  },
+  "high_confidence_count": 6,
+  "low_confidence_count": 84,
+  "high_confidence_ratio": 0.06666666666666667,
+  "low_confidence_ratio": 0.9333333333333333
+}

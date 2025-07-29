@@ -145,8 +145,13 @@ class WaferLightningModel(pl.LightningModule):
             dropout_rate=dropout_rate,
         )
 
-        # Loss function
-        self.criterion = nn.CrossEntropyLoss(weight=class_weights)
+        # Loss function - register class weights separately to avoid checkpoint issues
+        if class_weights is not None:
+            self.register_buffer("class_weights", class_weights)
+            self.criterion = nn.CrossEntropyLoss(weight=self.class_weights)
+        else:
+            self.register_buffer("class_weights", None)
+            self.criterion = nn.CrossEntropyLoss()
 
         # Metrics tracker
         self.metrics = TorchMetrics()
@@ -286,7 +291,7 @@ class WaferLightningModel(pl.LightningModule):
 
         # Learning rate scheduler
         scheduler = ReduceLROnPlateau(
-            optimizer, mode="min", factor=0.5, patience=10, min_lr=1e-7, verbose=True
+            optimizer, mode="min", factor=0.5, patience=10, min_lr=1e-7
         )
 
         return {

@@ -1,0 +1,20 @@
+WAFER DEFECT CLASSIFICATION - PREDICTION RESULTS
+=======================================================
+
+Total Samples: 90
+
+PREDICTION DISTRIBUTION:
+  Center      :    10 ( 11.1%)
+  Edge-Ring   :     5 (  5.6%)
+  Near-full   :     6 (  6.7%)
+  None        :    69 ( 76.7%)
+
+CONFIDENCE STATISTICS:
+  Mean:   0.3351
+  Std:    0.1728
+  Min:    0.1986
+  Max:    0.9692
+  Median: 0.3100
+
+High Confidence (>0.9):  6 (6.7%)
+Low Confidence (<=0.6): 84 (93.3%)
