@@ -5,6 +5,17 @@ import numpy as np
 from joblib import Parallel, delayed
 from scipy import ndimage
 from tqdm import tqdm
+import gdown
+from pathlib import Path
+
+raw_data_url = "https://drive.google.com/file/d/1M59pX-lPqL9APBIbp2AKQRTvngeUK8Va/view"
+if not Path("Wafer_Map_Datasets.npz").exists():
+
+    print("Downloading data from Google Drive:", raw_data_url)
+    gdown.download(
+        f"https://drive.google.com/uc?export=download&id={raw_data_url.split('/')[-2]}",
+        "Wafer_Map_Datasets.npz",
+    )
 
 # %%
 npz = np.load("./Wafer_Map_Datasets.npz", allow_pickle=True)
@@ -284,3 +295,5 @@ plt.subplot(1, 2, 2)
 plt.imshow(restored_images[0])
 plt.title("Restored Sparse WM38")
 plt.colorbar()
+
+# %%

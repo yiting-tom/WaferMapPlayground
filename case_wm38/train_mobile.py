@@ -2,9 +2,11 @@
 import torch
 from lightning import LightningModule, Trainer, seed_everything
 from lightning.pytorch.callbacks import ModelCheckpoint
+from lightning.pytorch.loggers import TensorBoardLogger
 from torch import nn
 from torch.nn import functional as F
 from torchmetrics import Accuracy, F1Score, Precision, Recall
+from torchvision import transforms
 from torchvision.models import MobileNet_V3_Large_Weights, mobilenet_v3_large
 
 seed_everything(42)
@@ -87,8 +89,13 @@ class MobileNetModule(LightningModule):
         self.log("val_loss", loss)
         for metric in self.metrics:
             metric(outputs, labels)
-        self.log_dict(metric.compute())
         return loss
+
+    def on_validation_epoch_end(self):
+        for metric in self.metrics:
+            self.log(f"val_{metric.__class__.__name__.lower()}", metric.compute())
+        for metric in self.metrics:
+            metric.reset()
 
     def test_step(
         self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int
@@ -99,8 +106,13 @@ class MobileNetModule(LightningModule):
         self.log("test_loss", loss)
         for metric in self.metrics:
             metric(outputs, labels)
-        self.log_dict(metric.compute())
         return loss
+
+    def on_test_epoch_end(self):
+        for metric in self.metrics:
+            self.log(f"test_{metric.__class__.__name__.lower()}", metric.compute())
+        for metric in self.metrics:
+            metric.reset()
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
         return torch.optim.Adam(self.parameters(), lr=1e-3)
@@ -116,10 +128,33 @@ def main():
         batch_size=128,
         num_workers=4,
         pin_memory=True,
+        train_transform=transforms.Compose(
+            [
+                transforms.Resize(224),
+                transforms.ToTensor(),
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomVerticalFlip(),
+                transforms.RandomRotation(180),
+            ]
+        ),
+        val_transform=transforms.Compose(
+            [
+                transforms.Resize(224),
+                transforms.ToTensor(),
+            ]
+        ),
+        test_transform=transforms.Compose(
+            [
+                transforms.Resize(224),
+                transforms.ToTensor(),
+            ]
+        ),
     )
     trainer = Trainer(
         max_epochs=300,
-        gpus=1,
+        accelerator="gpu",
+        devices=1,
+        strategy="ddp",
         callbacks=[
             ModelCheckpoint(
                 monitor="val_loss",
@@ -128,6 +163,10 @@ def main():
                 save_last=True,
             )
         ],
+        logger=TensorBoardLogger(
+            save_dir="lightning_logs",
+            name="mobile_net",
+        ),
     )
     trainer.fit(module, datamodule)
     trainer.test(module, datamodule)
@@ -135,3 +174,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# %%

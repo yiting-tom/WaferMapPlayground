@@ -4,6 +4,7 @@ import sys
 import numpy as np
 import torch
 from lightning import LightningDataModule, seed_everything
+from PIL import Image
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
@@ -32,6 +33,8 @@ class NumpyDataset(Dataset):
         label = self.labels[idx]
 
         if self.transform:
+            # Convert numpy array to PIL Image for transforms
+            image = Image.fromarray(image.astype(np.uint8))
             image = self.transform(image)
 
         if self.task == "multilabel":
@@ -72,25 +75,13 @@ class WM38DataModule(LightningDataModule):
         self.test_transform = test_transform
 
     def prepare_data(self):
-        from pathlib import Path
-
-        if not Path(self.npz_file).exists():
-            import requests
-
-            print("Downloading data from Google Drive:", self.raw_data_url)
-            response = requests.get(
-                f"https://drive.google.com/uc?export=download&id={self.raw_data_url.split('/')[-2]}"
-            )
-            with open(self.npz_file, "wb") as f:
-                f.write(response.content)
-
         npz = np.load(self.npz_file, allow_pickle=True)
         # images: (38015, 256, 256)
         self.images = npz["images"]
         # labels: (38015, 8)
         self.labels = npz["labels"]
 
-    def setup(self):
+    def setup(self, stage: str = None):
         train_images, val_images, train_labels, val_labels = train_test_split(
             self.images,
             self.labels,
