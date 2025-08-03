@@ -212,3 +212,9 @@ runs/
 data/
 *.db
 *trial*
+case_wm38/scripts/train_mobilenet.sh
+
+*.npz
+timm_cache
+checkpoints
+hparams.yaml

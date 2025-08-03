@@ -1,10 +1,8 @@
-# %%
 import sys
 
 import numpy as np
 import torch
 from lightning import LightningDataModule, seed_everything
-from PIL import Image
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
@@ -33,8 +31,6 @@ class NumpyDataset(Dataset):
         label = self.labels[idx]
 
         if self.transform:
-            # Convert numpy array to PIL Image for transforms
-            image = Image.fromarray(image.astype(np.uint8))
             image = self.transform(image)
 
         if self.task == "multilabel":
@@ -60,10 +56,12 @@ class WM38DataModule(LightningDataModule):
         train_transform: transforms.Compose = None,
         val_transform: transforms.Compose = None,
         test_transform: transforms.Compose = None,
+        datasize: int = None,
     ):
         super().__init__()
         self.npz_file = npz_file
         self.batch_size = batch_size
+        self.datasize = datasize
         # Set num_workers to 0 in interactive environments to avoid multiprocessing issues
         if hasattr(sys, "ps1") or "ipykernel" in sys.modules:
             self.num_workers = 0
@@ -80,6 +78,11 @@ class WM38DataModule(LightningDataModule):
         self.images = npz["images"]
         # labels: (38015, 8)
         self.labels = npz["labels"]
+        if self.datasize:
+            # Randomly sample datasize indices
+            idxs = np.random.choice(len(self.images), size=self.datasize, replace=False)
+            self.images = self.images[idxs]
+            self.labels = self.labels[idxs]
 
     def setup(self, stage: str = None):
         train_images, val_images, train_labels, val_labels = train_test_split(
@@ -214,12 +217,3 @@ def draw_transform() -> np.ndarray:
     plt.title("Restored Sparsed WM39")
 
     plt.imsave("datamodule_inputs.png", sparse_data[0][0].permute(1, 2, 0).numpy())
-
-
-# %%
-datamodule = WM38DataModule(
-    npz_file="sparse_wm38.npz",
-    batch_size=4,
-)
-# %%
-datamodule.prepare_data()

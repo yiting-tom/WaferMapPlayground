@@ -1,0 +1,11 @@
+torch
+torchvision
+lightning
+pandas
+matplotlib
+joblib
+gdown
+scikit-learn
+opencv-python
+tensorboard
+timm

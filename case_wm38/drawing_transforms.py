@@ -1,16 +1,16 @@
 # %%
+from pathlib import Path
+
 import cv2
+import gdown
 import matplotlib.pyplot as plt
 import numpy as np
 from joblib import Parallel, delayed
 from scipy import ndimage
 from tqdm import tqdm
-import gdown
-from pathlib import Path
 
 raw_data_url = "https://drive.google.com/file/d/1M59pX-lPqL9APBIbp2AKQRTvngeUK8Va/view"
 if not Path("Wafer_Map_Datasets.npz").exists():
-
     print("Downloading data from Google Drive:", raw_data_url)
     gdown.download(
         f"https://drive.google.com/uc?export=download&id={raw_data_url.split('/')[-2]}",
@@ -267,9 +267,10 @@ stacked_sparse.shape
 plt.imshow(stacked_sparse[0])
 stacked_sparse[0].shape
 # %%
-restored_npz = np.load("restored_wm38.npz", allow_pickle=True)
-restored_images = restored_npz["images"]
-plt.imshow(restored_images[0])
+sparse_npz = np.load("sparse_wm38.npz", allow_pickle=True)
+sparse_images = sparse_npz["images"]
+labels = sparse_npz["labels"]
+plt.imshow(sparse_images[0])
 # %%
 restored_images = Parallel(n_jobs=-1)(
     delayed(upscaled_filtered_with_circle_zoom_in)(image)
@@ -280,10 +281,9 @@ stacked_restored.shape
 plt.imshow(stacked_restored[0])
 np.savez_compressed("restored_wm38.npz", images=stacked_restored, labels=labels)
 # %%
-sparse_npz = np.load("sparse_wm38.npz", allow_pickle=True)
-sparse_images = sparse_npz["images"]
-labels = sparse_npz["labels"]
-plt.imshow(sparse_images[0])
+restored_npz = np.load("restored_wm38.npz", allow_pickle=True)
+restored_images = restored_npz["images"]
+plt.imshow(restored_images[0])
 # %%
 plt.figure(figsize=(10, 5))
 plt.subplot(1, 2, 1)
