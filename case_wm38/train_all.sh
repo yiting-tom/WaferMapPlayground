@@ -1,6 +1,6 @@
 #!/bin/bash
 
-backbones="mobilenet_v3_large tiny_vit_21m_512"
+backbones="tiny_vit_21m_512"
 npz_files="/home/W20862/Projects/WaferMapPlayground/case_wm38/restored_wm38.npz /home/W20862/Projects/WaferMapPlayground/case_wm38/sparse_wm38.npz /home/W20862/Projects/WaferMapPlayground/case_wm38/raw_wm38.npz"
 datasizes="38015 1920 19200"
 fully_finetune="False True"

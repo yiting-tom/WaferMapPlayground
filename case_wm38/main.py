@@ -119,12 +119,16 @@ def train(
 ):
     """Train a machine learning model with the specified parameters and save checkpoints."""
     npz_file = Path(npz_file)
-    exp_name = f"{backbone}_{lr}-{npz_file.stem}_{resize}_{datasize}-e{epochs}"
+    exp_name = f"{backbone}_{lr}-{npz_file.stem}_{resize}_{datasize}-e{epochs}" + (
+        "_ft" if fully_finetune else ""
+    )
+    print(f"Experiment name: `{exp_name}`")
     model = get_model(backbone, num_labels=8)
     classifier = Classifier(model, num_labels=8, lr=lr, fully_finetune=fully_finetune)
     train_transform, val_transform, test_transform = get_transforms(resize=resize)
     datamodule = WM38DataModule(
         npz_file=npz_file,
+        batch_size=64,
         train_transform=train_transform,
         val_transform=val_transform,
         test_transform=test_transform,
