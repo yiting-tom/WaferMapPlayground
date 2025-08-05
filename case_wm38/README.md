@@ -1,5 +1,6 @@
 # Mixed Wafer Map 38k
-[google drive]("https://drive.google.com/file/d/1M59pX-lPqL9APBIbp2AKQRTvngeUK8Va/view")
+- [google drive]("https://drive.google.com/file/d/1M59pX-lPqL9APBIbp2AKQRTvngeUK8Va/view")
+- [model weights](https://drive.google.com/drive/folders/1Os_Ts__nL1d0OTmA-pIvz1JGWlsrFPCH?usp=sharing)
 
 ## Experiments
 ### MobileNetV3Large Sparse 1920 e50 sz224 0.0001
