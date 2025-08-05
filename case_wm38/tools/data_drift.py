@@ -1,3 +1,4 @@
+# %%
 import warnings
 from typing import Dict, List
 
@@ -5,7 +6,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
-from scipy.spatial.distance import wasserstein_distance
+from scipy.stats import wasserstein_distance
 from skimage import color, feature, filters
 from skimage.feature import graycomatrix, graycoprops
 from sklearn.decomposition import PCA
@@ -527,3 +528,5 @@ def example_usage():
 
 if __name__ == "__main__":
     example_usage()
+
+# %%
