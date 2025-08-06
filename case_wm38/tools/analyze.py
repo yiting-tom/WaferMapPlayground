@@ -1672,5 +1672,3 @@ if __name__ == "__main__":
     print(
         "You can now use the analyzer object to access all results and create custom visualizations."
     )
-
-# %%
